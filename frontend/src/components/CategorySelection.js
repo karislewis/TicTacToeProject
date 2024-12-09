@@ -8,7 +8,7 @@ function CategorySelection() {
 
   const handleCategorySelect = (category) => {
     console.log("Selected Category:", category); // Debug log
-    navigate("/trivia"); // Navigate to Trivia Screen
+    navigate("/TriviaScreen"); // Navigate to Trivia Screen
   };
 
   return (

@@ -44,6 +44,11 @@ class GameConsumer(AsyncWebsocketConsumer):
                     "game_over": self.game_over  # Include game_over flag
                 })
 
+                await self.channel_layer.group_send(self.room_group_name, {
+            
+                "type": "navigate_to_trivia"
+                })
+
                 # Now it's the computer's turn if player X just moved
                 if self.turn == "O" and not self.game_over:
                     await asyncio.sleep(0.5)  # Add a 0.5 second delay before computer moves
@@ -81,6 +86,11 @@ class GameConsumer(AsyncWebsocketConsumer):
             "board": event["board"],
             "message": event["message"],
             "game_over": event["game_over"]  # Include game_over flag in the message
+        }))
+    async def navigate_to_trivia(self, event):
+        print("help")
+        await self.send(text_data=json.dumps({
+            "action": "navigate_to_trivia"
         }))
 
     def check_winner(self):

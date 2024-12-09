@@ -67,6 +67,7 @@
         const ws = new WebSocket("ws://127.0.0.1:8000/ws/myapp/1/");
 
         ws.onopen = e => {
+            print("CONNECTEDDDD")
             console.log("WebSocket connection established");
         };
 

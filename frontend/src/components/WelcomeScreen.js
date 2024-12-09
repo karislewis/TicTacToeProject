@@ -18,9 +18,7 @@ function WelcomeScreen() {
         <h2 style={styles.subtitle}>Are you ready for the challenge?</h2>
 
         {/* Existing Button (for /categories) */}
-        <button 
-        style={styles.button} 
-        onClick={() => window.location.href = "/game_vs_computer/"}>
+        <button style={styles.button} onClick={() => navigate("/CategorySelection")}>
         Start Game
         </button>
 
