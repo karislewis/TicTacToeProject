@@ -1,4 +1,16 @@
-{%extends "base.html" %}{% block title %} Home Page {% endblock %}
-{% block content %}
-<p> this is the home page</p>
-{% endblock %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Game</title>
+    <link rel="stylesheet" href="{% static 'frontend/build/static/css/main.e6c13ad2.css' %}">
+</head>
+<body>
+    <div id="root"></div>
+    <script src="{% static 'frontend/build/static/js/main.fb5645d0.js' %}"></script>
+</body>
+</html>
+

@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'myapp'
+    'myapp',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -119,7 +120,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+# Directory where Django will look for static files (the 'static' directory in your Django project)
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),  # This is your Django's static directory
+    os.path.join(BASE_DIR, 'static/frontend/build/static'),  # This is where your React build's static files are located
+]
+
+# Ensure static files are collected into the 'static' directory during deployment (this is for production only)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Only needed for production (collectstatic)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
