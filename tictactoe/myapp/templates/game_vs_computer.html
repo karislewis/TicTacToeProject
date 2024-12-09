@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Game</title>
+    <style>
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            justify-content: center;
+            margin-top: 50px;
+        }
+
+        .box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: lightgrey;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .box p.active {
+            transition: transform 0.3s ease-in-out;
+            transform: scale(1.5);
+        }
+
+        #gameResultMessage {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-board" class="board">
+        <div class="box" data-index="0"></div>
+        <div class="box" data-index="1"></div>
+        <div class="box" data-index="2"></div>
+        <div class="box" data-index="3"></div>
+        <div class="box" data-index="4"></div>
+        <div class="box" data-index="5"></div>
+        <div class="box" data-index="6"></div>
+        <div class="box" data-index="7"></div>
+        <div class="box" data-index="8"></div>
+    </div>
+
+    <!-- Result message below the board -->
+    <div id="gameResultMessage">
+        <p id="resultMessageText" style="font-size: 20px; font-weight: bold;"></p>
+    </div>
+
+    <script>
+        let playerLetter = "X";  // Player is X
+        let computerLetter = "O";  // Computer is O
+        let board = Array(9).fill("");  // Initialize the board with empty slots
+        let turn = "player";  // Player starts the game
+        let gameOver = false;
+        const boxes = document.getElementsByClassName("box");
+
+        // Establish WebSocket connection
+        const ws = new WebSocket("ws://127.0.0.1:8000/ws/myapp/1/");
+
+        ws.onopen = e => {
+            console.log("WebSocket connection established");
+        };
+
+        ws.onmessage = e => {
+            const data = JSON.parse(e.data);
+            console.log("Server response:", data);  // Debugging line to check server response
+
+            // Ensure turn exists in server response
+            if (data.turn) {
+                turn = data.turn;  // Update the turn from the server response
+            }
+
+            // Update the board with the server's response
+            if (data.board) {
+                board = data.board;
+                updateBoard();
+            }
+
+            // Check for game result and display the result message
+            if (data.message) {
+                displayGameResult(data.message);
+            }
+
+            // Check if the game is over
+            if (data.game_over) {
+                gameOver = true;
+                disableBoard();  // Disable board interaction when game is over
+            } else {
+                gameOver = false;
+                enableBoard();  // Re-enable board interaction if game is not over
+            }
+        };
+
+        // Handle player move when clicking a block
+        Array.from(boxes).forEach((elm, index) => {
+            elm.addEventListener("click", e => {
+                if (board[index] === "" && turn === "player" && !gameOver) {
+                    addPlayerLetter(elm, index);
+                    sendPlayerMove(index);  // Send the player's move to the server
+                }
+            });
+        });
+
+        function addPlayerLetter(element, index) {
+            element.innerHTML = `<p class="player-letter">${playerLetter}</p>`;
+            element.setAttribute("player", playerLetter);
+            setTimeout(() => {
+                element.children[0].classList.add("active");
+            }, 1);
+        }
+
+        function sendPlayerMove(index) {
+            ws.send(JSON.stringify({
+                action: "player_move",
+                move: index
+            }));
+        }
+
+        // Update the board visually
+        function updateBoard() {
+            Array.from(boxes).forEach((elm, index) => {
+                if (board[index] !== "") {
+                    elm.innerHTML = `<p class="player-letter">${board[index]}</p>`;
+                    elm.setAttribute("player", board[index]);
+                    setTimeout(() => {
+                        elm.children[0].classList.add("active");
+                    }, 1);
+                }
+            });
+        }
+
+        // Display the game result message below the board
+        function displayGameResult(message) {
+            const gameResultMessage = document.getElementById("gameResultMessage");
+            const resultMessageText = document.getElementById("resultMessageText");
+            resultMessageText.textContent = message;  // Set the message text
+            gameResultMessage.style.display = "block";  // Make the message visible at the bottom
+        }
+
+        // Disable board interaction when game is over
+        function disableBoard() {
+            Array.from(boxes).forEach(elm => {
+                elm.style.pointerEvents = "none";  // Disable clicks on the boxes
+            });
+        }
+
+        // Enable board interaction when game is not over
+        function enableBoard() {
+            Array.from(boxes).forEach(elm => {
+                elm.style.pointerEvents = "auto";  // Enable clicks on the boxes
+            });
+        }
+    </script>
+
+</body>
+</html>

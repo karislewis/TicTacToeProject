@@ -2,6 +2,7 @@ from django.shortcuts import render,HttpResponse,redirect
 from .models import TodoItem
 from .models import Room
 from django.contrib import messages
+import random
 # Create your views here.
 def home(request):
     return render(request,"home.html")
@@ -36,3 +37,5 @@ def myapp(request,id=None,name=None):
         messages.error(request,"Room does not exist!")
         return redirect("/")
     
+def game_vs_computer(request):
+    return render(request, 'game_vs_computer.html')
