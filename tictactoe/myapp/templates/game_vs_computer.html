@@ -44,10 +44,10 @@
         #backButton {
             padding: 10px 20px;
             background-color: #6a8bd7; /* Button color */
-            color: white;
+            color: rgb(255, 255, 255);
             border: none;
             border-radius: 5px;
-            font-size: 16px;
+            font-size: 29px;
             cursor: pointer;
             position: absolute; /* Make the button absolute */
             bottom: 100px; /* Position it at the bottom */
@@ -57,10 +57,53 @@
         #backButton:hover {
             background-color: #2a3d8d; /* Darker green on hover */
         }
+  
+        .modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }
+    
+        .modal-content {
+            background: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 24px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    
+        #closeModalButton {
+            padding: 10px 20px;
+            background-color: #6a8bd7;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    
+        #closeModalButton:hover {
+            background-color: #2a3d8d;
+        }
     </style>
 </head>
 <body>
-
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content">
+            <p>Click a spot on the board to Start!</p>
+            <button id="closeModalButton">OK</button>
+        </div>
+    </div>
+    
     <div id="game-board" class="board">
         <div class="box" data-index="0"></div>
         <div class="box" data-index="1"></div>
@@ -78,12 +121,15 @@
         <p id="resultMessageText" style="font-size: 20px; font-weight: bold;"></p>
     </div>
     <button id="backButton" onclick="window.location.href='/';">Back to Home</button>
+    <!-- Pop-up Modal -->
+    
+
 
     <script>
         let playerLetter = "X";  // Player is X
         let computerLetter = "O";  // Computer is O
         let board = Array(9).fill("");  // Initialize the board with empty slots
-        let turn = "player";  // Player starts the game
+        let turn = "X";  // Player starts the game
         let gameOver = false;
         const boxes = document.getElementsByClassName("box");
 
@@ -98,6 +144,8 @@
         ws.onmessage = e => {
             const data = JSON.parse(e.data);
             console.log("Server response:", data);  // Debugging line to check server response
+            
+            
 
             // Ensure turn exists in server response
             if (data.turn) {
@@ -112,12 +160,14 @@
 
             // Check for game result and display the result message
             if (data.message) {
+                console.log('Updating message:', data.message);
                 displayGameResult(data.message);
             }
 
             // Check if the game is over
             if (data.game_over) {
                 gameOver = true;
+                console.log("Game over status from server:", data.game_over);
                 disableBoard();  // Disable board interaction when game is over
             } else {
                 gameOver = false;
@@ -128,7 +178,7 @@
         // Handle player move when clicking a block
         Array.from(boxes).forEach((elm, index) => {
             elm.addEventListener("click", e => {
-                if (board[index] === "" && turn === "player" && !gameOver) {
+                if (board[index] === "" && turn === "X" && !gameOver) {
                     addPlayerLetter(elm, index);
                     sendPlayerMove(index);  // Send the player's move to the server
                 }
@@ -162,12 +212,16 @@
                 }
             });
         }
+        
 
         // Display the game result message below the board
         function displayGameResult(message) {
             const gameResultMessage = document.getElementById("gameResultMessage");
             const resultMessageText = document.getElementById("resultMessageText");
-            resultMessageText.textContent = message;  // Set the message text
+            console.log("Displaying result message:", message); 
+     
+            resultMessageText.textContent = message;
+      // Set the message text
             gameResultMessage.style.display = "block";  // Make the message visible at the bottom
         }
 
@@ -184,7 +238,21 @@
                 elm.style.pointerEvents = "auto";  // Enable clicks on the boxes
             });
         }
+    
+        window.onload = () => {
+            const welcomeModal = document.getElementById("welcomeModal");
+            const closeModalButton = document.getElementById("closeModalButton");
+    
+            // Show the modal on page load
+            welcomeModal.style.display = "flex";
+    
+            // Close the modal when the button is clicked
+            closeModalButton.addEventListener("click", () => {
+                welcomeModal.style.display = "none";
+            });
+        };
     </script>
+    
 
 </body>
 </html>
