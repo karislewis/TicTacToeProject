@@ -8,5 +8,6 @@ urlpatterns= [
     path("game_vs_computer/",views.game_vs_computer,name="game_vs_computer"),
     path("index/",views.index,name="Start"),
     path("myapp/<int:id>/<str:name>/",views.myapp),
-    path("todos/",views.todos,name="Todos")
+    path("todos/",views.todos,name="Todos"),
+    path('api/update-turn/', views.update_turn, name='update_turn'),
 ]

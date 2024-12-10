@@ -14,34 +14,63 @@ function TriviaScreen() {
 
   const [question, setQuestion] = useState(getRandomQuestion());
   const [inputAnswer, setInputAnswer] = useState("");
-  const [showMessage, setShowMessage] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(null); // Track if the answer was correct
+  const [feedback, setFeedback] = useState(null); // Correct or incorrect feedback
+  const [loading, setLoading] = useState(false); // Handle backend communication delays
 
   function getRandomQuestion() {
     return triviaQuestions[Math.floor(Math.random() * triviaQuestions.length)];
   }
 
-  const handleAnswerSubmit = () => {
-    if (inputAnswer.trim().toLowerCase() === question.answer.toLowerCase()) {
-      setIsCorrect(true);
-      window.location.href = "/game_vs_computer/"; // Navigate to the game if correct
-    } else {
-      setIsCorrect(false);
-      setShowMessage(true);
-      // Allow computer's turn even if answer is incorrect
-      setTimeout(() => {
-        // Trigger computer's move after delay
-        computerMove();
-      }, 2000);  // 2-second delay before computer move
+  const handleAnswerSubmit = async () => {
+    // Check if the meta tag exists before trying to access it
+    const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfTokenElement) {
+      console.error("CSRF token meta tag not found.");
+      return;
     }
+    const csrfToken = csrfTokenElement.getAttribute('content'); // Get CSRF token
+  
+    const isCorrect =
+      inputAnswer.trim().toLowerCase() === question.answer.toLowerCase();
+  
+    setFeedback(isCorrect ? "Correct!" : "Wrong! It's the computer's turn...");
+    setLoading(true);
+  
+    try {
+      // Notify backend about the player's response
+      const response = await fetch("/api/update-turn/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken, // Include CSRF token in request header
+        },
+        body: JSON.stringify({ is_correct: isCorrect }),
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+  
+        // If it's the computer's turn, simulate delay before navigating
+        if (data.current_turn === "computer") {
+          setTimeout(() => {
+            window.location.href = "/game_vs_computer/";
+          }, 2000); // Delay to allow feedback display
+        } else {
+          // Reset question for player's next turn
+          setQuestion(getRandomQuestion());
+        }
+      } else {
+        console.error("Failed to update game state.");
+      }
+    } catch (error) {
+      console.error("Error communicating with backend:", error);
+    } finally {
+      setLoading(false);
+    }
+  
     setInputAnswer("");
   };
-
-  const computerMove = () => {
-    // This can be a placeholder for now
-    console.log("Computer is making a move...");
-    // You can also trigger an event or WebSocket message to update the game state with computer's move
-  };
+  
 
   return (
     <div style={styles.container}>
@@ -55,19 +84,19 @@ function TriviaScreen() {
           placeholder="Your answer"
           value={inputAnswer}
           onChange={(e) => setInputAnswer(e.target.value)}
+          disabled={loading} // Disable input while loading
         />
-        <button style={styles.button} onClick={handleAnswerSubmit}>
-          Submit
+        <button style={styles.button} onClick={handleAnswerSubmit} disabled={loading}>
+          {loading ? "Checking..." : "Submit"}
         </button>
       </div>
 
-      {showMessage && (
+      {feedback && (
         <div style={styles.messageOverlay}>
           <div style={styles.messageBox}>
-            <h3>{isCorrect ? "Correct!" : "Wrong Answer!"}</h3>
-            <p>{isCorrect ? "Your turn is complete." : "Next Player's Turn."}</p>
-            <button style={styles.button} onClick={() => setShowMessage(false)}>
-              Close
+            <h3>{feedback}</h3>
+            <button style={styles.button} onClick={() => setFeedback(null)}>
+              {feedback === "Correct!" ? "Next Question" : "Continue"}
             </button>
           </div>
         </div>
@@ -132,6 +161,7 @@ const styles = {
     borderRadius: "5px",
     cursor: "pointer",
     transition: "background 0.3s ease-in-out",
+    opacity: "0.9",
   },
   messageOverlay: {
     position: "fixed",
