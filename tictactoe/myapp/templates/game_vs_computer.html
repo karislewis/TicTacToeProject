@@ -94,6 +94,58 @@
         #closeModalButton:hover {
             background-color: #2a3d8d;
         }
+        .trivia-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .trivia-popup .question {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .trivia-popup .answer-btn {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .trivia-popup .answer-btn:hover {
+            background-color: #45a049;
+        }
+
+        .trivia-popup .close-btn {
+            background-color: #f44336;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .trivia-popup .close-btn:hover {
+            background-color: #d32f2f;
+        }
     </style>
 </head>
 <body>
@@ -102,6 +154,13 @@
             <p>Click a spot on the board to Start!</p>
             <button id="closeModalButton">OK</button>
         </div>
+    </div>
+    <div id="triviaPopup" class="trivia-popup" style="display: none;">
+        <div class="question" id="triviaQuestion">What is the capital of France?</div>
+        <input type="text" id="triviaAnswer" placeholder="Type your answer" />
+        <button class="answer-btn" onclick="checkAnswer()">Submit</button>
+        <button class="close-btn" onclick="closeTriviaPopup()">Close</button>
+    </div>
     </div>
     
     <div id="game-board" class="board">
@@ -132,6 +191,18 @@
         let turn = "X";  // Player starts the game
         let gameOver = false;
         const boxes = document.getElementsByClassName("box");
+        function freezeBoard() {
+            Array.from(boxes).forEach(elm => {
+                elm.style.pointerEvents = "none"; // Disable clicks on the boxes
+            });
+        }
+
+        // Function to unfreeze the board (enable clicks)
+        function unfreezeBoard() {
+            Array.from(boxes).forEach(elm => {
+                elm.style.pointerEvents = "auto"; // Enable clicks on the boxes
+            });
+        }
 
         // Establish WebSocket connection
         const ws = new WebSocket("ws://127.0.0.1:8000/ws/myapp/1/");
@@ -177,15 +248,163 @@
 
         // Handle player move when clicking a block
         Array.from(boxes).forEach((elm, index) => {
-            elm.addEventListener("click", e => {
+            elm.addEventListener("click", (e) => {
                 if (board[index] === "" && turn === "X" && !gameOver) {
-                    addPlayerLetter(elm, index);
-                    sendPlayerMove(index);  // Send the player's move to the server
+                    // First, ask the trivia question before placing X
+                    askTriviaQuestion(index);
                 }
             });
         });
+        const triviaQuestions = [
+        {
+            question: "What is the capital of France?",
+            answer: "Paris"
+        },
+        {
+            question: "What is the largest planet in our solar system?",
+            answer: "Jupiter"
+        },
+        {
+            question: "Who wrote 'Romeo and Juliet'?",
+            answer: "Shakespeare"
+        },
+        {
+        question: "What is the smallest planet in our solar system?",
+        answer: "Mercury"
+        },
+        {
+            question: "Who painted the Mona Lisa?",
+            answer: "Leonardo da Vinci"
+        },
+        {
+            question: "What is the square root of 64?",
+            answer: "8"
+        },
+        {
+            question: "What is the tallest mountain in the world?",
+            answer: "Mount Everest"
+        },
+        {
+            question: "What is the chemical symbol for gold?",
+            answer: "Au"
+        },
+        
+        {
+            question: "What is the largest ocean on Earth?",
+            answer: "Pacific Ocean"
+        },
+        {
+            question: "In which country would you find the Great Barrier Reef?",
+            answer: "Australia"
+        },
+        {
+            question: "What is the longest river in the world?",
+            answer: "Nile River"
+        },
+        
+        {
+            question: "How many continents are there?",
+            answer: "7"
+        },
+        {
+            question: "Which planet is known as the Red Planet?",
+            answer: "Mars"
+        },
+        {
+            question: "What is the main ingredient in guacamole?",
+            answer: "Avocado"
+        },
+        {
+            question: "What is the chemical formula for water?",
+            answer: "H2O"
+        },
+       
+        {
+            question: "What is the capital of Canada?",
+            answer: "Ottawa"
+        },
+        {
+            question: "What element does 'O' represent on the periodic table?",
+            answer: "Oxygen"
+        },
+        {
+        question: "What is the name of the fictional city where Batman operates?",
+        answer: "Gotham City"
+        },
+        {
+            question: "What popular TV series features the characters Jon Snow, Daenerys Targaryen, and Tyrion Lannister?",
+            answer: "Game of Thrones"
+        },
+    
+        {
+            question: "Which 2010 animated movie featured a character named 'Po' the panda?",
+            answer: "Kung Fu Panda"
+        },
+     
+        {
+            question: "Which singer’s fans are called ‘Beyhive’?",
+            answer: "Beyoncé"
+        },
+        {
+            question: "What 2000s TV show features the characters Ross, Monica, and Chandler?",
+            answer: "Friends"
+        },
+        {
+            question: "Who played the character of Captain America in the Marvel Cinematic Universe?",
+            answer: "Chris Evans"
+        },
+      
+        {
+            question: "Which TV series is known for the phrase, 'How you doin'?'",
+            answer: "Friends"
+        },
+        {
+            question: "What is the name of the fictional country in the Marvel movie 'Black Panther'?",
+            answer: "Wakanda"
+        },
+        {
+            question: "In which movie does the character Elsa sing 'Let It Go'?",
+            answer: "Frozen"
+        },
+        {
+            question: "What movie is the quote 'May the Force be with you' from?",
+            answer: "Star Wars"
+        },
+    
+        {
+            question: "Which rapper is known as 'Slim Shady'?",
+            answer: "Eminem"
+        }
+        // Add more trivia questions as needed
+    ];
 
-        function addPlayerLetter(element, index) {
+        // Ask trivia question before allowing the move
+        function askTriviaQuestion(index) {
+            freezeBoard();  // Freeze the board until the trivia is answered
+
+            const randomIndex = Math.floor(Math.random() * triviaQuestions.length);
+            const trivia = triviaQuestions[randomIndex];
+
+            const userAnswer = prompt(trivia.question);  // Show trivia question in a prompt
+
+            if (userAnswer && userAnswer.trim().toLowerCase() === trivia.answer.toLowerCase()) {
+                alert("Correct!");
+                closeTriviaPopup();
+                // Allow player to place X if the answer is correct
+                addPlayerLetter(index);
+                sendPlayerMove(index);  // Send the player's move to the server
+                
+            } else {
+                alert("Wrong Try Again");
+                closeTriviaPopup();
+            }
+
+            unfreezeBoard();  // Unfreeze the board, allowing the player to place X
+        }
+
+        // Add player letter (X) to the board
+        function addPlayerLetter(index) {
+            const element = boxes[index];
             element.innerHTML = `<p class="player-letter">${playerLetter}</p>`;
             element.setAttribute("player", playerLetter);
             setTimeout(() => {
@@ -193,6 +412,7 @@
             }, 1);
         }
 
+        // Send player move (update game state)
         function sendPlayerMove(index) {
             ws.send(JSON.stringify({
                 action: "player_move",
@@ -200,7 +420,7 @@
             }));
         }
 
-        // Update the board visually
+        // Update the board visually (if needed)
         function updateBoard() {
             Array.from(boxes).forEach((elm, index) => {
                 if (board[index] !== "") {
@@ -212,17 +432,17 @@
                 }
             });
         }
-        
+        function closeTriviaPopup() {
+            document.getElementById("triviaPopup").style.display = "none";
+            document.getElementById("triviaAnswer").value = ''; // Clear the answer input field
+        }
 
-        // Display the game result message below the board
+        // Handle game result (optional, display message when game over)
         function displayGameResult(message) {
             const gameResultMessage = document.getElementById("gameResultMessage");
             const resultMessageText = document.getElementById("resultMessageText");
-            console.log("Displaying result message:", message); 
-     
             resultMessageText.textContent = message;
-      // Set the message text
-            gameResultMessage.style.display = "block";  // Make the message visible at the bottom
+            gameResultMessage.style.display = "block";
         }
 
         // Disable board interaction when game is over
@@ -237,7 +457,7 @@
             Array.from(boxes).forEach(elm => {
                 elm.style.pointerEvents = "auto";  // Enable clicks on the boxes
             });
-        }
+        };
     
         window.onload = () => {
             const welcomeModal = document.getElementById("welcomeModal");

@@ -52,7 +52,7 @@ function TriviaScreen({ setNextPlayer }) {
 
  const handleAnswerSubmit = async () => {
    const isCorrect = inputAnswer.trim().toLowerCase() === currentQuestion.answer.toLowerCase();
-   setFeedback(isCorrect ? "Correct!" : "Wrong! It's the computer's turn...");
+   setFeedback(isCorrect ? "Correct!" : "Try to do better...");
    setLoading(true);
 
 
@@ -128,7 +128,7 @@ function TriviaScreen({ setNextPlayer }) {
          <div style={styles.messageBox}>
            <h3>{feedback}</h3>
            <button style={styles.button} onClick={() => setFeedback(null)}>
-             {feedback === "Correct!" ? "Next Question" : "Continue"}
+             {feedback === "Correct!" ? "Let's Play" : "Continue"}
            </button>
          </div>
        </div>
