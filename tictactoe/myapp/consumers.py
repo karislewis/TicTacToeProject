@@ -12,7 +12,9 @@ class GameConsumer(AsyncWebsocketConsumer):
         self.turn = "X"  # Player X starts first
         self.winner = None
         self.game_over = False  # Flag to check if the game is over
+        
         await self.accept()
+        
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
@@ -35,24 +37,38 @@ class GameConsumer(AsyncWebsocketConsumer):
                     self.game_over = True  # End the game
                 else:
                     self.turn = "O" if self.turn == "X" else "X"
-                    message = f"Player {self.turn}'s turn"
+                    message=""
+                    
+                
+                    
 
+               
                 await self.channel_layer.group_send(self.room_group_name, {
                     "type": "game_update",
                     "board": self.board,
                     "message": message,
-                    "game_over": self.game_over  # Include game_over flag
+                    "game_over": self.game_over
                 })
+
+                # After sending the first group_send
+                print("First group_send has been executed.")
+                
+                
+                await asyncio.sleep(.2)
+                
 
                 await self.channel_layer.group_send(self.room_group_name, {
             
                 "type": "navigate_to_trivia"
                 })
+                
 
                 # Now it's the computer's turn if player X just moved
                 if self.turn == "O" and not self.game_over:
-                    await asyncio.sleep(0.5)  # Add a 0.5 second delay before computer moves
+                    await asyncio.sleep(1)  # Add a 0.5 second delay before computer moves
+                    
                     await self.computer_move()
+
 
     async def computer_move(self):
     # Logic for computer's move (randomly choose an empty spot)
@@ -61,6 +77,8 @@ class GameConsumer(AsyncWebsocketConsumer):
         if empty_spots:
             move = random.choice(empty_spots)  # Randomly pick an empty spot
             self.board[move] = "O"
+            
+
 
             if self.check_winner():
                 self.winner = "O"
@@ -71,7 +89,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                 self.game_over = True  # End the game
             else:
                 self.turn = "X"  # Player X's turn next
-                message = f"Player {self.turn}'s turn"
+                message=""
+       
 
             # Broadcast the updated board and message
             await self.channel_layer.group_send(self.room_group_name, {
@@ -80,6 +99,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 "message": message,
                 "game_over": self.game_over  # Include game_over flag in the message
             })
+            
 
     async def game_update(self, event):
         await self.send(text_data=json.dumps({
@@ -90,7 +110,7 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def navigate_to_trivia(self, event):
         print("help")
         await self.send(text_data=json.dumps({
-            "action": "navigate_to_trivia"
+              # Include game_over flag in the message
         }))
 
     def check_winner(self):
